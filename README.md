@@ -1,4 +1,4 @@
-Jasa Setting Mikrotik, OLT, Switch Manage, Web-Server, Mail-Server, DNS Server, Monitoring server, CPANEL, dah yang dibuatin server apa aja deh, bisa hubungi nomor hp saya +62 822-3348-3221 (Purwanto)
+Jasa Setting Mikrotik, OLT, Switch Manage, Web-Server, Mail-Server, DNS Server, Monitoring server, CPANEL, dah yang ingin dibuatin server apa aja deh, bisa hubungi nomor hp saya +62 822-3348-3221 (Purwanto)
 
 ---
 
