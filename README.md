@@ -72,7 +72,7 @@ server {
     listen 80;
     server_name example.com;
 
-    root /var/www/html/speedtest;
+    root /var/www/html;
     index index.html;
 
     location / {
@@ -86,7 +86,7 @@ Untuk Apache, buat file konfigurasi di `/etc/apache2/sites-available/`:
 ```apache
 <VirtualHost *:80>
     ServerName example.com
-    DocumentRoot /var/www/html/speedtest
+    DocumentRoot /var/www/html
 
     <Directory /var/www/html/speedtest>
         Options Indexes FollowSymLinks
