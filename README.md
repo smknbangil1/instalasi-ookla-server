@@ -4,165 +4,185 @@ Jasa Setting Mikrotik, OLT, Switch Manage, Web-Server, Mail-Server, DNS Server, 
 
 ## **Panduan Instalasi Ookla Server di Ubuntu 24.04**
 
-### 1. **Download Script Ookla Server**
-Unduh script instalasi Ookla Server dengan perintah berikut:
+Berikut adalah panduan instalasi **OoklaServer** di Ubuntu 24.04 yang telah disusun ulang agar lebih terstruktur dan mudah dipahami:
+
+---
+
+## **Panduan Instalasi OoklaServer di Ubuntu 24.04**
+
+### **Prasyarat**
+1. **Buat A-Record Subdomain**
+   Pastikan Anda membuat A-Record untuk subdomain yang mengarah ke IP Public server Anda. Contohnya: `speedtest.domainanda.com`.
+
+2. **Konfigurasi Firewall**
+   Jalankan perintah berikut untuk membuka port yang diperlukan:
+   ```bash
+   sudo ufw allow 22
+   sudo ufw allow 80
+   sudo ufw allow 443
+   sudo ufw allow 8080
+   sudo ufw allow 5060
+   sudo ufw enable
+   sudo ufw reload
+   ```
+
+---
+
+### **Langkah Instalasi**
+
+#### **1. Unduh Installer**
+   Jalankan perintah berikut untuk mengunduh skrip installer:
+   ```bash
+   wget https://install.speedtest.net/ooklaserver/ooklaserver.sh
+   ```
+
+#### **2. Berikan Hak Akses Eksekusi**
+   Ubah hak akses skrip agar dapat dieksekusi:
+   ```bash
+   chmod +x ooklaserver.sh
+   ```
+
+#### **3. Eksekusi Instalasi**
+   Jalankan skrip instalasi:
+   ```bash
+   sudo ./ooklaserver.sh install
+   ```
+
+#### **4. Edit Konfigurasi**
+   Buka file konfigurasi:
+   ```bash
+   sudo nano OoklaServer.properties
+   ```
+
+   Ubah dan sesuaikan konfigurasi menjadi seperti berikut:
+   ```
+   OoklaServer.useIPv6 = true
+   OoklaServer.allowedDomains = *.ookla.com, *.speedtest.net
+   OoklaServer.enableAutoUpdate = true
+   OoklaServer.ssl.useLetsEncrypt = true
+   ```
+   **Catatan**: Sertifikat SSL akan diterbitkan setelah server didaftarkan dan direview oleh tim Ookla.
+
+   Untuk pengaturan lanjutan, Anda dapat merujuk ke dokumentasi resmi:
+   [Advanced Server Daemon Configuration](https://support.ookla.com/hc/en-us/articles/234577948-Advanced-Server-Daemon-Configuration)
+
+---
+
+### **Manajemen OoklaServer Daemon**
+Masuk ke direktori instalasi OoklaServer:
 ```bash
-wget https://install.speedtest.net/ooklaserver/ooklaserver.sh
+cd <directory_instalasi_ooklaserver>
 ```
 
-### 2. **Memberikan Izin Eksekusi pada Script**
-Setelah script terunduh, berikan izin eksekusi:
-```bash
-chmod a+x ooklaserver.sh
-```
-
-### 3. **Menjalankan, Menghentikan, dan Merestart Ookla Server**
-Gunakan perintah berikut untuk mengelola service Ookla Server:
-- **Start**: 
+Gunakan perintah berikut untuk manajemen layanan:
+- Menjalankan:
   ```bash
-  ./ooklaserver.sh start
+  sudo ./ooklaserver.sh start
   ```
-- **Restart**:
+- Menghentikan:
   ```bash
-  ./ooklaserver.sh restart
+  sudo ./ooklaserver.sh stop
   ```
-- **Stop**:
+- Merestart:
   ```bash
-  ./ooklaserver.sh stop
+  sudo ./ooklaserver.sh restart
   ```
 
-### 4. **Install Web Server, PHP, dan Unzip**
-Untuk mendukung operasi fallback, instal Nginx atau Apache, PHP, dan Unzip:
-- Untuk **Nginx**:
-  ```bash
-  sudo apt -y install nginx-full php8.3-fpm unzip
-  ```
-- Untuk **Apache**:
-  ```bash
-  sudo apt -y install apache2 php libapache2-mod-php unzip
-  ```
-
-### 5. **Pindah ke Direktori Web Root**
-Masuk ke direktori `/var/www/html` untuk mengunduh fallback file:
+Untuk melihat bantuan, gunakan:
 ```bash
-cd /var/www/html
+./ooklaserver.sh -h
 ```
 
-### 6. **Download Fallback Ookla**
-Unduh file fallback yang diperlukan untuk Ookla Server:
-```bash
-wget https://install.speedtest.net/httplegacy/http_legacy_fallback.zip
-```
+---
 
-### 7. **Unzip Fallback File**
-Ekstrak file yang telah diunduh dan cek isi direktori:
-```bash
-unzip http_legacy_fallback.zip
-```
-Hasil ekstraksi akan berada di direktori `speedtest/`. Lihat hasilnya dengan:
-```bash
-ls -lh
-```
+### **Verifikasi Awal**
+1. Akses server dengan membuka URL berikut di browser:
+   ```
+   http://speedtest.domainanda.com:8080
+   ```
 
-### 8. **Atur Konfigurasi Virtual Host**
-Buat atau edit file konfigurasi virtual host sesuai domain/subdomain Anda. Contoh konfigurasi untuk Nginx:
+2. Gunakan alat host-tester Ookla untuk pemeriksaan lebih lanjut:
+   [Speedtest Host Tester](https://www.speedtest.net/host-tester)  
+   Masukkan URL berikut:
+   ```
+   speedtest.domainanda.com:8080
+   ```
+   **Catatan**: Jika terdapat bagian yang "failed", lakukan perbaikan sebelum mendaftarkan server Anda sebagai host.
 
+---
+
+### **Mengatasi Masalah Upload (Failed Upload Test)**
+
+#### **1. Instal Web Server dan PHP**
+Untuk mengatasi masalah upload, Anda perlu menginstal web server (seperti Nginx) dan PHP. Contoh konfigurasi virtual host Nginx adalah sebagai berikut:
 ```nginx
 server {
     listen 80;
-    server_name example.com;
+    listen 443 ssl;
 
+    server_name speedtest.domainanda.com;
+
+    # Redirect HTTP ke HTTPS
+    if ($scheme = http) {
+        return 301 https://$host$request_uri;
+    }
+
+    # Sertifikat SSL
+    ssl_certificate /etc/letsencrypt/live/speedtest.domainanda.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/speedtest.domainanda.com/privkey.pem;
+
+    # Direktori Root
     root /var/www/html;
-    index index.html;
+    index index.php index.html index.htm;
 
+    # Log File
+    access_log /var/log/nginx/speedtest.access.log;
+    error_log /var/log/nginx/speedtest.error.log;
+
+    # PHP Configuration
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    client_max_body_size 1000M;
+
+    # File Statis
     location / {
         try_files $uri $uri/ =404;
     }
 }
 ```
 
-Untuk Apache, buat file konfigurasi di `/etc/apache2/sites-available/`:
-
-```apache
-<VirtualHost *:80>
-    ServerName example.com
-    DocumentRoot /var/www/html
-
-    <Directory /var/www/html/speedtest>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-Aktifkan vhost dan restart web server:
-- **Nginx**:
-  ```bash
-  sudo systemctl restart nginx
-  ```
-- **Apache**:
-  ```bash
-  sudo a2ensite your_vhost.conf
-  sudo systemctl restart apache2
-  ```
-
-### 9. **Install Certbot untuk SSL**
-Gunakan Certbot untuk mengamankan koneksi dengan SSL:
+#### **2. Unduh dan Pasang HTTP Legacy Fallback**
+Unduh dan ekstrak file HTTP Legacy Fallback:
 ```bash
-sudo apt install certbot python3-certbot-nginx
+wget http://install.speedtest.net/httplegacy/http_legacy_fallback.zip
+unzip http_legacy_fallback.zip
 ```
-Untuk Nginx:
+Pindahkan hasil ekstraksi ke direktori web server:
 ```bash
-sudo certbot --nginx -d example.com
-```
-Untuk Apache:
-```bash
-sudo certbot --apache -d example.com
+mv http_legacy_fallback /var/www/html/speedtest
 ```
 
-### 10. **Atur SSL pada Konfigurasi Ookla**
-Buka dokumentasi Ookla di [Advanced Server Daemon Configuration](https://support.ookla.com/hc/en-us/articles/234577948-Advanced-Server-Daemon-Configuration) untuk melakukan pengaturan SSL pada Ookla Server.
-
-### 11. **Tes Installasi Ookla Server di Browser**
-Buka browser dan arahkan ke:
-- `http://example.com:8080`
-- `http://example.com/speedtest/upload.php`
-
-Pastikan halaman "It worked!" muncul sebagai tanda server berhasil terinstall.
-
-### 12. **Tes Konfigurasi dengan Host Tester**
-Gunakan Host Tester Ookla untuk menguji konfigurasi server:
-- Buka: [https://speedtest.net/host-tester](https://speedtest.net/host-tester)
-
-### 13. **Buat Service untuk Jalankan Server di Reboot**
-Buat perintah agar Ookla Server berjalan saat server reboot. Misalnya, buat file systemd untuk Ookla Server:
-1. Buat file unit di `/etc/systemd/system/ooklaserver.service`:
-```ini
-[Unit]
-Description=Ookla Server Daemon
-After=network.target
-
-[Service]
-Type=simple
-User=ooklauser
-ExecStart=/full_path_to_your_Ookla_Server_Daemon/OoklaServer --daemon
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
+Akses URL berikut untuk memastikan semuanya bekerja:
 ```
-2. Reload systemd dan aktifkan service:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable ooklaserver
+https://speedtest.domainanda.com/speedtest/upload.php
 ```
-Service ini akan berjalan otomatis saat server reboot.
-
-### 14. **Registrasi Akun Ookla dan Submit Server**
-Setelah semuanya siap, buat akun Ookla dan submit server Anda di [https://account.ookla.com/register/servers?step=1](https://account.ookla.com/register/servers?step=1).
-Tunggu review dari tim Ookla sekitar 48 jam.
 
 ---
 
-Dengan mengikuti panduan di atas, Ookla Server Anda akan terpasang dan siap untuk digunakan.
+### **Verifikasi Final**
+Gunakan URL berikut untuk memverifikasi konfigurasi server Anda:
+[Ookla Host Tester](https://www.ookla.com/host-tester)
+
+---
+
+### **Pendaftaran Server**
+Jika semua tes telah berhasil, Anda dapat mendaftarkan server Anda untuk menjadi host resmi Speedtest Ookla. Proses ini akan direview dalam 2 hari kerja. Setelah disetujui, server Anda akan aktif sebagai host Speedtest.
+
+--- 
+
+Panduan ini telah dirancang untuk memastikan proses instalasi berjalan lancar. Jangan ragu untuk menghubungi dukungan Ookla jika Anda memerlukan bantuan lebih lanjut.
