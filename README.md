@@ -2,12 +2,6 @@ Jasa Setting Mikrotik, OLT, Switch Manage, Web-Server, Mail-Server, DNS Server, 
 
 ---
 
-## **Panduan Instalasi Ookla Server di Ubuntu 24.04**
-
-Berikut adalah panduan instalasi **OoklaServer** di Ubuntu 24.04 yang telah disusun ulang agar lebih terstruktur dan mudah dipahami:
-
----
-
 ## **Panduan Instalasi OoklaServer di Ubuntu 24.04**
 
 ### **Prasyarat**
