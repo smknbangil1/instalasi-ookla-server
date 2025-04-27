@@ -179,4 +179,23 @@ Jika semua tes telah berhasil, Anda dapat mendaftarkan server Anda untuk menjadi
 
 --- 
 
-Panduan ini telah dirancang untuk memastikan proses instalasi berjalan lancar. Jangan ragu untuk menghubungi dukungan Ookla jika Anda memerlukan bantuan lebih lanjut.
+systemd:
+```systemd
+[Unit]
+Description=OoklaServer Daemon
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/ookla/ooklaserver.sh start
+WorkingDirectory=/ookla
+User=root
+Group=root
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+---
